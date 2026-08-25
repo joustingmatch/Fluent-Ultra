@@ -47,42 +47,24 @@ function TabModule:New(Title, Icon, Parent)
 		ImageRectSize = Vector2.zero
 	}
 
+	-- Icon-only rail button: the icon is centered, the tab name lives in a
+	-- hover tooltip (see below) rather than beside the icon.
 	Tab.Frame = New("TextButton", {
-		Size = UDim2.new(1, 0, 0, 34),
+		Size = UDim2.new(1, 0, 0, 40),
 		BackgroundTransparency = 1,
 		Parent = Parent,
+		Text = "",
 		ThemeTag = {
 			BackgroundColor3 = "Tab",
 		},
 	}, {
 		New("UICorner", {
-			CornerRadius = UDim.new(0, 6),
-		}),
-		New("TextLabel", {
-			AnchorPoint = Vector2.new(0, 0.5),
-			Position = Icon ~= nil and UDim2.new(0, 30, 0.5, 0) or UDim2.new(0, 12, 0.5, 0),
-			Text = Title,
-			RichText = true,
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			TextTransparency = 0,
-			FontFace = Font.new(
-				"rbxasset://fonts/families/GothamSSm.json",
-				Enum.FontWeight.Regular,
-				Enum.FontStyle.Normal
-			),
-			TextSize = 12,
-			TextXAlignment = "Left",
-			TextYAlignment = "Center",
-			Size = UDim2.new(1, -12, 1, 0),
-			BackgroundTransparency = 1,
-			ThemeTag = {
-				TextColor3 = "Text",
-			},
+			CornerRadius = UDim.new(0, 8),
 		}),
 		New("ImageLabel", {
-			AnchorPoint = Vector2.new(0, 0.5),
-			Size = UDim2.fromOffset(16, 16),
-			Position = UDim2.new(0, 8, 0.5, 0),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Size = UDim2.fromOffset(20, 20),
+			Position = UDim2.fromScale(0.5, 0.5),
 			BackgroundTransparency = 1,
 			ImageRectOffset = Icon and Icon.ImageRectOffset or Vector2.zero,
 			ImageRectSize = Icon and Icon.ImageRectSize or Vector2.zero,
@@ -92,6 +74,56 @@ function TabModule:New(Title, Icon, Parent)
 			},
 		}),
 	})
+
+	-- Tooltip that reveals the tab name to the right of the rail on hover.
+	local Tooltip = New("Frame", {
+		Parent = Window.Root,
+		Visible = false,
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, 26),
+		BackgroundTransparency = 0.05,
+		ZIndex = 999,
+		ThemeTag = {
+			BackgroundColor3 = "DropdownHolder",
+		},
+	}, {
+		New("UICorner", {
+			CornerRadius = UDim.new(0, 6),
+		}),
+		New("UIPadding", {
+			PaddingLeft = UDim.new(0, 10),
+			PaddingRight = UDim.new(0, 10),
+		}),
+		New("UIStroke", {
+			Transparency = 0.7,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			ThemeTag = {
+				Color = "DropdownBorder",
+			},
+		}),
+		New("TextLabel", {
+			Text = Title,
+			AutomaticSize = Enum.AutomaticSize.X,
+			Size = UDim2.fromScale(0, 1),
+			BackgroundTransparency = 1,
+			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+			TextSize = 13,
+			TextYAlignment = "Center",
+			ZIndex = 1000,
+			ThemeTag = {
+				TextColor3 = "Text",
+			},
+		}),
+	})
+
+	local function ShowTooltip()
+		local RelY = Tab.Frame.AbsolutePosition.Y - Window.Root.AbsolutePosition.Y
+		Tooltip.Position = UDim2.fromOffset(12 + Window.TabWidth + 10, RelY + 7)
+		Tooltip.Visible = true
+	end
+	local function HideTooltip()
+		Tooltip.Visible = false
+	end
 
 	local ContainerLayout = New("UIListLayout", {
 		Padding = UDim.new(0, 5),
@@ -132,9 +164,11 @@ function TabModule:New(Title, Icon, Parent)
 
 	Creator.AddSignal(Tab.Frame.MouseEnter, function()
 		Tab.SetTransparency(Tab.Selected and 0.85 or 0.89)
+		ShowTooltip()
 	end)
 	Creator.AddSignal(Tab.Frame.MouseLeave, function()
 		Tab.SetTransparency(Tab.Selected and 0.89 or 1)
+		HideTooltip()
 	end)
 	Creator.AddSignal(Tab.Frame.MouseButton1Down, function()
 		Tab.SetTransparency(0.92)
@@ -143,6 +177,7 @@ function TabModule:New(Title, Icon, Parent)
 		Tab.SetTransparency(Tab.Selected and 0.85 or 0.89)
 	end)
 	Creator.AddSignal(Tab.Frame.MouseButton1Click, function()
+		HideTooltip()
 		TabModule:SelectTab(TabIndex)
 	end)
 

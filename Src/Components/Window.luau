@@ -48,17 +48,19 @@ return function(Config)
 	Window.AcrylicPaint = Acrylic.AcrylicPaint()
 	Window.TabWidth = Config.TabWidth
 
+	-- Rounded-square highlight that sits behind the active rail icon.
 	local Selector = New("Frame", {
-		Size = UDim2.fromOffset(4, 0),
+		Size = UDim2.new(1, 0, 0, 40),
 		BackgroundColor3 = Color3.fromRGB(76, 194, 255),
-		Position = UDim2.fromOffset(0, 17),
-		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromOffset(0, 0),
+		BackgroundTransparency = 0.82,
+		AnchorPoint = Vector2.new(0, 0),
 		ThemeTag = {
 			BackgroundColor3 = "Accent",
 		},
 	}, {
 		New("UICorner", {
-			CornerRadius = UDim.new(0, 2),
+			CornerRadius = UDim.new(0, 8),
 		}),
 	})
 
@@ -82,6 +84,18 @@ return function(Config)
 		}),
 	})
 
+	-- Darker rounded panel that visually separates the icon rail from content.
+	local RailPanel = New("Frame", {
+		Size = UDim2.new(0, Window.TabWidth + 12, 1, -16),
+		Position = UDim2.fromOffset(8, 8),
+		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+		BackgroundTransparency = 0.55,
+	}, {
+		New("UICorner", {
+			CornerRadius = UDim.new(0, 12),
+		}),
+	})
+
 	local TabFrame = New("Frame", {
 		Size = UDim2.new(0, Window.TabWidth, 1, -66),
 		Position = UDim2.new(0, 12, 0, 54),
@@ -92,21 +106,41 @@ return function(Config)
 		Selector,
 	})
 
+	-- Underline that tracks the width of the centered tab title.
+	Window.TabDisplayUnderline = New("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Size = UDim2.fromOffset(0, 2),
+		Position = UDim2.new(0.5, math.floor(Window.TabWidth / 2), 0, 74),
+		BackgroundColor3 = Color3.fromRGB(76, 194, 255),
+		ThemeTag = {
+			BackgroundColor3 = "Accent",
+		},
+	}, {
+		New("UICorner", {
+			CornerRadius = UDim.new(1, 0),
+		}),
+	})
+
 	Window.TabDisplay = New("TextLabel", {
 		RichText = true,
 		Text = "Tab",
 		TextTransparency = 0,
 		FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-		TextSize = 28,
-		TextXAlignment = "Left",
+		TextSize = 18,
+		TextXAlignment = "Center",
 		TextYAlignment = "Center",
-		Size = UDim2.new(1, -16, 0, 28),
-		Position = UDim2.fromOffset(Window.TabWidth + 26, 56),
+		Size = UDim2.new(1, -(Window.TabWidth + 52), 0, 22),
+		Position = UDim2.fromOffset(Window.TabWidth + 26, 48),
 		BackgroundTransparency = 1,
 		ThemeTag = {
 			TextColor3 = "Text",
 		},
 	})
+
+	-- Keep the underline centered under the title and matched to its width.
+	Creator.AddSignal(Window.TabDisplay:GetPropertyChangedSignal("TextBounds"), function()
+		Window.TabDisplayUnderline.Size = UDim2.fromOffset(Window.TabDisplay.TextBounds.X + 8, 2)
+	end)
 
 	Window.ContainerHolder = New("Frame", {
 		Size = UDim2.fromScale(1, 1),
@@ -134,7 +168,9 @@ return function(Config)
 		Parent = Config.Parent,
 	}, {
 		Window.AcrylicPaint.Frame,
+		RailPanel,
 		Window.TabDisplay,
+		Window.TabDisplayUnderline,
 		Window.ContainerCanvas,
 		TabFrame,
 		ResizeStartFrame,
@@ -172,8 +208,8 @@ return function(Config)
 		Y = Window.Position.Y.Offset,
 	})
 
-	Window.SelectorPosMotor = Flipper.SingleMotor.new(17)
-	Window.SelectorSizeMotor = Flipper.SingleMotor.new(0)
+	Window.SelectorPosMotor = Flipper.SingleMotor.new(0)
+	Window.SelectorSizeMotor = Flipper.SingleMotor.new(40)
 	Window.ContainerBackMotor = Flipper.SingleMotor.new(0)
 	Window.ContainerPosMotor = Flipper.SingleMotor.new(94)
 
@@ -188,19 +224,7 @@ return function(Config)
 	local LastValue = 0
 	local LastTime = 0
 	Window.SelectorPosMotor:onStep(function(Value)
-		Selector.Position = UDim2.new(0, 0, 0, Value + 17)
-		local Now = tick()
-		local DeltaTime = Now - LastTime
-
-		if LastValue ~= nil then
-			Window.SelectorSizeMotor:setGoal(Spring((math.abs(Value - LastValue) / (DeltaTime * 60)) + 16))
-			LastValue = Value
-		end
-		LastTime = Now
-	end)
-
-	Window.SelectorSizeMotor:onStep(function(Value)
-		Selector.Size = UDim2.new(0, 4, 0, Value)
+		Selector.Position = UDim2.new(0, 0, 0, Value)
 	end)
 
 	Window.ContainerBackMotor:onStep(function(Value)

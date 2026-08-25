@@ -26,16 +26,16 @@ return function(Title, Parent)
 	}, {
 		New("TextLabel", {
 			RichText = true,
-			Text = Title,
+			Text = string.upper(Title),
 			TextTransparency = 0,
-			FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-			TextSize = 18,
+			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+			TextSize = 12,
 			TextXAlignment = "Left",
 			TextYAlignment = "Center",
-			Size = UDim2.new(1, -16, 0, 18),
-			Position = UDim2.fromOffset(0, 2),
+			Size = UDim2.new(1, -16, 0, 14),
+			Position = UDim2.fromOffset(0, 4),
 			ThemeTag = {
-				TextColor3 = "Text",
+				TextColor3 = "SubText",
 			},
 		}),
 		Section.Container,
