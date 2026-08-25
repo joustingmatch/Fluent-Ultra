@@ -40,7 +40,8 @@ do
     local Farming = Farm:SubTab{ Title = "Farming" }
     local Hatching = Farm:SubTab{ Title = "Hatching" }
 
-    local MobFarm = Farming:Section("Mob Farm")
+    -- Left / Right groupboxes (Obsidian-style two columns)
+    local MobFarm = Farming:CreateLeftGroupbox("Mob Farm")
     MobFarm:CreateToggle("Example_AutoFarm", {
         Title = "Auto Farm",
         Description = "Farms the nearest mob",
@@ -51,7 +52,13 @@ do
         Default = false
     })
 
-    local Egg = Hatching:Section("Hatching")
+    local Dungeon = Farming:CreateRightGroupbox("Dungeon")
+    Dungeon:CreateToggle("Example_AutoDungeon", {
+        Title = "Auto Farm",
+        Default = false
+    })
+
+    local Egg = Hatching:CreateLeftGroupbox("Hatching")
     Egg:CreateToggle("Example_AutoHatch", {
         Title = "Auto Hatch",
         Description = "Also auto-hatch a rare egg",

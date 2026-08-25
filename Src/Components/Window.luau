@@ -3,7 +3,6 @@
 local Root = script.Parent.Parent
 local Flipper = require(Root.Packages.Flipper)
 local Creator = require(Root.Modules.Creator)
-local Acrylic = require(Root.Modules.Acrylic)
 local Signal = require(Root.Packages.Signal)
 local Assets = require(script.Parent.Assets)
 local Components = script.Parent
@@ -45,7 +44,49 @@ return function(Config)
 	local MinimizeNotif = false
 	local IsDraggingHideButton, DragInputHideButton, DragStart, DragStartPos = false
 
-	Window.AcrylicPaint = Acrylic.AcrylicPaint()
+	-- Plain solid rounded window background (Acrylic blur removed).
+	Window.AcrylicPaint = {
+		AddParent = function() end,
+		SetVisibility = function() end,
+	}
+	Window.AcrylicPaint.Frame = New("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 0,
+		BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+		ThemeTag = {
+			BackgroundColor3 = "AcrylicMain",
+		},
+	}, {
+		New("UICorner", {
+			CornerRadius = UDim.new(0, 8),
+		}),
+		-- Kept named "Background" for ToggleTransparency compatibility.
+		New("Frame", {
+			Name = "Background",
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			ThemeTag = {
+				BackgroundColor3 = "AcrylicMain",
+			},
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+		}),
+		New("Frame", {
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(1, 1),
+			ZIndex = 2,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+			New("UIStroke", {
+				Transparency = 0.5,
+				Thickness = 1,
+				ThemeTag = {
+					Color = "AcrylicBorder",
+				},
+			}),
+		}),
+	})
+
 	Window.TabWidth = Config.TabWidth
 
 	-- Rounded-square highlight that sits behind the active rail icon.
@@ -124,18 +165,6 @@ return function(Config)
 		ImageRectSize = LogoData and LogoData.ImageRectSize or Vector2.zero,
 	})
 
-	-- Hairline separating the logo from the tab icons.
-	local RailDivider = New("Frame", {
-		AnchorPoint = Vector2.new(0.5, 0),
-		Size = UDim2.new(0, Window.TabWidth - 4, 0, 1),
-		Position = UDim2.fromOffset(12 + Window.TabWidth / 2, 50),
-		BackgroundTransparency = 0.85,
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		ThemeTag = {
-			BackgroundColor3 = "ElementBorder",
-		},
-	})
-
 	local TabFrame = New("Frame", {
 		Size = UDim2.new(0, Window.TabWidth, 1, -70),
 		Position = UDim2.new(0, 12, 0, 58),
@@ -145,42 +174,6 @@ return function(Config)
 		Window.TabHolder,
 		Selector,
 	})
-
-	-- Underline that tracks the width of the centered tab title.
-	Window.TabDisplayUnderline = New("Frame", {
-		AnchorPoint = Vector2.new(0.5, 0),
-		Size = UDim2.fromOffset(0, 2),
-		Position = UDim2.new(0.5, math.floor(Window.TabWidth / 2), 0, 74),
-		BackgroundColor3 = Color3.fromRGB(76, 194, 255),
-		ThemeTag = {
-			BackgroundColor3 = "Accent",
-		},
-	}, {
-		New("UICorner", {
-			CornerRadius = UDim.new(1, 0),
-		}),
-	})
-
-	Window.TabDisplay = New("TextLabel", {
-		RichText = true,
-		Text = "Tab",
-		TextTransparency = 0,
-		FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-		TextSize = 18,
-		TextXAlignment = "Center",
-		TextYAlignment = "Center",
-		Size = UDim2.new(1, -(Window.TabWidth + 52), 0, 22),
-		Position = UDim2.fromOffset(Window.TabWidth + 26, 48),
-		BackgroundTransparency = 1,
-		ThemeTag = {
-			TextColor3 = "Text",
-		},
-	})
-
-	-- Keep the underline centered under the title and matched to its width.
-	Creator.AddSignal(Window.TabDisplay:GetPropertyChangedSignal("TextBounds"), function()
-		Window.TabDisplayUnderline.Size = UDim2.fromOffset(Window.TabDisplay.TextBounds.X + 8, 2)
-	end)
 
 	Window.ContainerHolder = New("Frame", {
 		Size = UDim2.fromScale(1, 1),
@@ -210,9 +203,6 @@ return function(Config)
 		Window.AcrylicPaint.Frame,
 		RailPanel,
 		Window.Logo,
-		RailDivider,
-		Window.TabDisplay,
-		Window.TabDisplayUnderline,
 		Window.ContainerCanvas,
 		TabFrame,
 		ResizeStartFrame,
@@ -236,9 +226,6 @@ return function(Config)
 		Window = Window,
 	})
 
-	if Library.UseAcrylic then
-		Window.AcrylicPaint.AddParent(Window.Root)
-	end
 
 	local SizeMotor = Flipper.GroupMotor.new({
 		X = Window.Size.X.Offset,
@@ -485,9 +472,6 @@ return function(Config)
 	end
 
 	function Window:Destroy()
-		if Library.UseAcrylic then
-			Window.AcrylicPaint.Model:Destroy()
-		end
 		Window.Root:Destroy()
 	end
 

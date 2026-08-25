@@ -1,3 +1,4 @@
+local TweenService = game:GetService("TweenService")
 local Root = script.Parent.Parent
 local Flipper = require(Root.Packages.Flipper)
 local Creator = require(Root.Modules.Creator)
@@ -75,10 +76,34 @@ function TabModule:New(Title, Icon, Parent)
 		}),
 	})
 
-	-- Tooltip that reveals the tab name to the right of the rail on hover.
+	-- Tooltip that reveals the tab name to the right of the rail on hover,
+	-- with a smooth scale + fade pop.
+	local TooltipScale = New("UIScale", { Scale = 0.85 })
+	local TooltipStroke = New("UIStroke", {
+		Transparency = 0.7,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		ThemeTag = {
+			Color = "DropdownBorder",
+		},
+	})
+	local TooltipLabel = New("TextLabel", {
+		Text = Title,
+		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromScale(0, 1),
+		BackgroundTransparency = 1,
+		FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+		TextSize = 13,
+		TextYAlignment = "Center",
+		ZIndex = 1000,
+		ThemeTag = {
+			TextColor3 = "Text",
+		},
+	})
+
 	local Tooltip = New("Frame", {
 		Parent = Window.Root,
 		Visible = false,
+		AnchorPoint = Vector2.new(0, 0.5),
 		AutomaticSize = Enum.AutomaticSize.X,
 		Size = UDim2.fromOffset(0, 26),
 		BackgroundTransparency = 0.05,
@@ -94,35 +119,44 @@ function TabModule:New(Title, Icon, Parent)
 			PaddingLeft = UDim.new(0, 10),
 			PaddingRight = UDim.new(0, 10),
 		}),
-		New("UIStroke", {
-			Transparency = 0.7,
-			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			ThemeTag = {
-				Color = "DropdownBorder",
-			},
-		}),
-		New("TextLabel", {
-			Text = Title,
-			AutomaticSize = Enum.AutomaticSize.X,
-			Size = UDim2.fromScale(0, 1),
-			BackgroundTransparency = 1,
-			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
-			TextSize = 13,
-			TextYAlignment = "Center",
-			ZIndex = 1000,
-			ThemeTag = {
-				TextColor3 = "Text",
-			},
-		}),
+		TooltipStroke,
+		TooltipLabel,
+		TooltipScale,
 	})
+
+	local TooltipOpen = false
 
 	local function ShowTooltip()
 		local RelY = Tab.Frame.AbsolutePosition.Y - Window.Root.AbsolutePosition.Y
-		Tooltip.Position = UDim2.fromOffset(12 + Window.TabWidth + 10, RelY + 7)
+		Tooltip.Position = UDim2.fromOffset(12 + Window.TabWidth + 10, RelY + 20)
+		TooltipOpen = true
 		Tooltip.Visible = true
+
+		TooltipScale.Scale = 0.85
+		Tooltip.BackgroundTransparency = 1
+		TooltipStroke.Transparency = 1
+		TooltipLabel.TextTransparency = 1
+
+		local Info = TweenInfo.new(0.16, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		local FadeInfo = TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		TweenService:Create(TooltipScale, Info, { Scale = 1 }):Play()
+		TweenService:Create(Tooltip, FadeInfo, { BackgroundTransparency = 0.05 }):Play()
+		TweenService:Create(TooltipStroke, FadeInfo, { Transparency = 0.7 }):Play()
+		TweenService:Create(TooltipLabel, FadeInfo, { TextTransparency = 0 }):Play()
 	end
+
 	local function HideTooltip()
-		Tooltip.Visible = false
+		TooltipOpen = false
+		local Info = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		TweenService:Create(TooltipScale, Info, { Scale = 0.85 }):Play()
+		TweenService:Create(Tooltip, Info, { BackgroundTransparency = 1 }):Play()
+		TweenService:Create(TooltipStroke, Info, { Transparency = 1 }):Play()
+		TweenService:Create(TooltipLabel, Info, { TextTransparency = 1 }):Play()
+		task.delay(0.13, function()
+			if not TooltipOpen then
+				Tooltip.Visible = false
+			end
+		end)
 	end
 
 	local ContainerLayout = New("UIListLayout", {
@@ -187,17 +221,57 @@ function TabModule:New(Title, Icon, Parent)
 	Tab.Container = Tab.ContainerFrame
 	Tab.ScrollFrame = Tab.Container
 
-	function Tab:Section(SectionTitle)
-		local Section = { 
-			Type = "Section" 
-		}
+	-- Builds two side-by-side columns (Obsidian-style Left/Right groupboxes)
+	-- inside the given parent frame.
+	local function BuildColumns(ParentFrame)
+		local function Column(XScale, XOffset)
+			return New("Frame", {
+				Parent = ParentFrame,
+				BackgroundTransparency = 1,
+				Position = UDim2.new(XScale, XOffset, 0, 0),
+				Size = UDim2.new(0.5, -8, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+			}, {
+				New("UIListLayout", {
+					Padding = UDim.new(0, 14),
+					SortOrder = Enum.SortOrder.LayoutOrder,
+				}),
+			})
+		end
+		return Column(0, 0), Column(0.5, 8)
+	end
 
-		local SectionFrame = require(Components.Section)(SectionTitle, Tab.Container)
+	local function MakeSection(SectionTitle, Column, ScrollFrame)
+		local Section = { Type = "Section" }
+		local SectionFrame = require(Components.Section)(SectionTitle, Column)
 		Section.Container = SectionFrame.Container
-		Section.ScrollFrame = Tab.Container
-
+		Section.ScrollFrame = ScrollFrame
 		setmetatable(Section, Elements)
 		return Section
+	end
+
+	-- Plain (non-sub-tab) tab content: a single wrapper holding two columns.
+	Tab.ContentWrapper = New("Frame", {
+		Parent = Tab.ContainerFrame,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 1,
+	})
+	Tab.LeftColumn, Tab.RightColumn = BuildColumns(Tab.ContentWrapper)
+
+	function Tab:CreateLeftGroupbox(SectionTitle)
+		return MakeSection(SectionTitle, Tab.LeftColumn, Tab.ContainerFrame)
+	end
+	function Tab:CreateRightGroupbox(SectionTitle)
+		return MakeSection(SectionTitle, Tab.RightColumn, Tab.ContainerFrame)
+	end
+	Tab.AddLeftGroupbox = Tab.CreateLeftGroupbox
+	Tab.AddRightGroupbox = Tab.CreateRightGroupbox
+
+	-- Section defaults to the left column for backward compatibility.
+	function Tab:Section(SectionTitle)
+		return MakeSection(SectionTitle, Tab.LeftColumn, Tab.ContainerFrame)
 	end
 
 	Tab.CreateSection = Tab.Section
@@ -269,12 +343,7 @@ function TabModule:New(Title, Icon, Parent)
 		local Active = Tab.ContainerFrame.Visible
 		Tab.HeaderRow.Visible = Active and HasSubs
 		if Active and HasSubs then
-			Window.TabDisplay.Visible = false
-			Window.TabDisplayUnderline.Visible = false
 			task.defer(UpdateHeaderUnderline)
-		elseif Active then
-			Window.TabDisplay.Visible = true
-			Window.TabDisplayUnderline.Visible = true
 		end
 	end)
 
@@ -314,11 +383,6 @@ function TabModule:New(Title, Icon, Parent)
 			},
 		})
 
-		local PageLayout = New("UIListLayout", {
-			Padding = UDim.new(0, 5),
-			SortOrder = Enum.SortOrder.LayoutOrder,
-		})
-
 		SubTab.Page = New("Frame", {
 			Parent = Tab.ContainerFrame,
 			BackgroundTransparency = 1,
@@ -326,10 +390,9 @@ function TabModule:New(Title, Icon, Parent)
 			AutomaticSize = Enum.AutomaticSize.Y,
 			Visible = Index == 1,
 			LayoutOrder = Index,
-		}, {
-			PageLayout,
 		})
 
+		SubTab.LeftColumn, SubTab.RightColumn = BuildColumns(SubTab.Page)
 		SubTab.Container = SubTab.Page
 		SubTab.ScrollFrame = Tab.ContainerFrame
 
@@ -337,13 +400,17 @@ function TabModule:New(Title, Icon, Parent)
 			Tab:SelectSubTab(Index)
 		end)
 
+		function SubTab:CreateLeftGroupbox(SectionTitle)
+			return MakeSection(SectionTitle, SubTab.LeftColumn, Tab.ContainerFrame)
+		end
+		function SubTab:CreateRightGroupbox(SectionTitle)
+			return MakeSection(SectionTitle, SubTab.RightColumn, Tab.ContainerFrame)
+		end
+		SubTab.AddLeftGroupbox = SubTab.CreateLeftGroupbox
+		SubTab.AddRightGroupbox = SubTab.CreateRightGroupbox
+
 		function SubTab:Section(SectionTitle)
-			local Section = { Type = "Section" }
-			local SectionFrame = require(Components.Section)(SectionTitle, SubTab.Page)
-			Section.Container = SectionFrame.Container
-			Section.ScrollFrame = Tab.ContainerFrame
-			setmetatable(Section, Elements)
-			return Section
+			return MakeSection(SectionTitle, SubTab.LeftColumn, Tab.ContainerFrame)
 		end
 		SubTab.CreateSection = SubTab.Section
 		SubTab.AddSection = SubTab.Section
@@ -380,7 +447,6 @@ function TabModule:SelectTab(Tab)
 	TabModule.Tabs[Tab].SetTransparency(0.89)
 	TabModule.Tabs[Tab].Selected = true
 
-	Window.TabDisplay.Text = TabModule.Tabs[Tab].Name
 	Window.SelectorPosMotor:setGoal(Spring(TabModule:GetCurrentTabPos(), { frequency = 6 }))
 
 	task.spawn(function()

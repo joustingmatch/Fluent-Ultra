@@ -2,7 +2,6 @@ local Root = script.Parent.Parent
 
 local Flipper = require(Root.Packages.Flipper)
 local Creator = require(Root.Modules.Creator)
-local Acrylic = require(Root.Modules.Acrylic)
 
 local Spring = Flipper.Spring.new
 local Instant = Flipper.Instant.new
@@ -44,7 +43,22 @@ function Notification:New(Config)
 	Config.Sound.Parent = SoundService
 	Config.Sound.PlayOnRemove = true
 
-	NewNotification.AcrylicPaint = Acrylic.AcrylicPaint()
+	-- Plain solid rounded background (Acrylic blur removed).
+	NewNotification.AcrylicPaint = { Frame = New("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 0,
+		BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+		ThemeTag = {
+			BackgroundColor3 = "AcrylicMain",
+		},
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+		New("UIStroke", {
+			Transparency = 0.5,
+			Thickness = 1,
+			ThemeTag = { Color = "AcrylicBorder" },
+		}),
+	}) }
 
 	NewNotification.Title = New("TextLabel", {
 		Position = UDim2.new(0, 14, 0, 17),
@@ -200,9 +214,6 @@ function Notification:New(Config)
 					Offset = Spring(60, { frequency = 5 }),
 				})
 				task.wait(0.4)
-				if require(Root).UseAcrylic then
-					NewNotification.AcrylicPaint.Model:Destroy()
-				end
 				NewNotification.Holder:Destroy()
 			end)
 		end
