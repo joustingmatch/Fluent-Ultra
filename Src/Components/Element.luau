@@ -59,7 +59,7 @@ return function(Title, Desc, Parent, Hover, Config)
 	}) :: Frame
 
 	Element.Border = New("UIStroke", {
-		Transparency = 0.5,
+		Transparency = 1,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		Color = Color3.fromRGB(0, 0, 0),
 		ThemeTag = {
@@ -67,9 +67,22 @@ return function(Title, Desc, Parent, Hover, Config)
 		},
 	}) :: UIStroke
 
+	-- Hairline divider between rows inside a groupbox. Section hides the
+	-- divider on its final row.
+	Element.Divider = New("Frame", {
+		Name = "GroupboxDivider",
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, 0),
+		Size = UDim2.new(1, -20, 0, 1),
+		BackgroundTransparency = 0.9,
+		ThemeTag = {
+			BackgroundColor3 = "ElementBorder",
+		},
+	}) :: Frame
+
 	Element.Frame = New("TextButton", {
 		Size = UDim2.new(1, 0, 0, 0),
-		BackgroundTransparency = 0.89,
+		BackgroundTransparency = 1,
 		BackgroundColor3 = Color3.fromRGB(130, 130, 130),
 		Parent = Parent,
 		AutomaticSize = Enum.AutomaticSize.Y,
@@ -77,13 +90,10 @@ return function(Title, Desc, Parent, Hover, Config)
 		LayoutOrder = 7,
 		ThemeTag = {
 			BackgroundColor3 = "Element",
-			BackgroundTransparency = "ElementTransparency",
 		},
 	}, {
-		New("UICorner", {
-			CornerRadius = UDim.new(0, 4),
-		}),
 		Element.Border,
+		Element.Divider,
 		Element.LabelHolder,
 	}) :: TextButton
 
@@ -111,26 +121,21 @@ return function(Title, Desc, Parent, Hover, Config)
 	Element:SetDesc(Desc)
 	
 	if Hover then
-		local Themes = Root.Themes
-		local Motor, SetTransparency = Creator.SpringMotor(
-			Creator.GetThemeProperty("ElementTransparency"),
-			Element.Frame,
-			"BackgroundTransparency",
-			false,
-			true
-		)
+		-- Flat rows: transparent by default, a faint fill on hover.
+		local Base, Hovered = 1, 0.93
+		local Motor, SetTransparency = Creator.SpringMotor(Base, Element.Frame, "BackgroundTransparency")
 
 		Creator.AddSignal(Element.Frame.MouseEnter, function()
-			SetTransparency(Creator.GetThemeProperty("ElementTransparency") - Creator.GetThemeProperty("HoverChange"))
+			SetTransparency(Hovered)
 		end)
 		Creator.AddSignal(Element.Frame.MouseLeave, function()
-			SetTransparency(Creator.GetThemeProperty("ElementTransparency"))
+			SetTransparency(Base)
 		end)
 		Creator.AddSignal(Element.Frame.MouseButton1Down, function()
-			SetTransparency(Creator.GetThemeProperty("ElementTransparency") + Creator.GetThemeProperty("HoverChange"))
+			SetTransparency(Hovered - 0.03)
 		end)
 		Creator.AddSignal(Element.Frame.MouseButton1Up, function()
-			SetTransparency(Creator.GetThemeProperty("ElementTransparency") - Creator.GetThemeProperty("HoverChange"))
+			SetTransparency(Hovered)
 		end)
 	end
 

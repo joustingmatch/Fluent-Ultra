@@ -29,6 +29,36 @@ local Tabs = {
 
 local Options = Library.Options
 
+-- Sub-Tabs: a tab whose content is split into a centered sub-tab nav
+-- (Farming / Hatching), each holding its own groupbox sections.
+local Farm = Window:CreateTab{
+    Title = "Farm",
+    Icon = "swords"
+}
+
+do
+    local Farming = Farm:SubTab{ Title = "Farming" }
+    local Hatching = Farm:SubTab{ Title = "Hatching" }
+
+    local MobFarm = Farming:Section("Mob Farm")
+    MobFarm:CreateToggle("Example_AutoFarm", {
+        Title = "Auto Farm",
+        Description = "Farms the nearest mob",
+        Default = false
+    })
+    MobFarm:CreateToggle("Example_AutoTower", {
+        Title = "Auto Tower",
+        Default = false
+    })
+
+    local Egg = Hatching:Section("Hatching")
+    Egg:CreateToggle("Example_AutoHatch", {
+        Title = "Auto Hatch",
+        Description = "Also auto-hatch a rare egg",
+        Default = false
+    })
+end
+
 Library:Notify{
     Title = "Notification",
     Content = "This is a notification",

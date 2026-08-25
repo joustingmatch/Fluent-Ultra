@@ -124,9 +124,21 @@ return function(Config)
 		ImageRectSize = LogoData and LogoData.ImageRectSize or Vector2.zero,
 	})
 
+	-- Hairline separating the logo from the tab icons.
+	local RailDivider = New("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Size = UDim2.new(0, Window.TabWidth - 4, 0, 1),
+		Position = UDim2.fromOffset(12 + Window.TabWidth / 2, 50),
+		BackgroundTransparency = 0.85,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		ThemeTag = {
+			BackgroundColor3 = "ElementBorder",
+		},
+	})
+
 	local TabFrame = New("Frame", {
-		Size = UDim2.new(0, Window.TabWidth, 1, -66),
-		Position = UDim2.new(0, 12, 0, 54),
+		Size = UDim2.new(0, Window.TabWidth, 1, -70),
+		Position = UDim2.new(0, 12, 0, 58),
 		BackgroundTransparency = 1,
 		ClipsDescendants = true,
 	}, {
@@ -198,6 +210,7 @@ return function(Config)
 		Window.AcrylicPaint.Frame,
 		RailPanel,
 		Window.Logo,
+		RailDivider,
 		Window.TabDisplay,
 		Window.TabDisplayUnderline,
 		Window.ContainerCanvas,

@@ -203,6 +203,166 @@ function TabModule:New(Title, Icon, Parent)
 	Tab.CreateSection = Tab.Section
 	Tab.AddSection = Tab.Section
 
+	-- ============================ Sub-Tabs ============================
+	-- A top-level tab can hold sub-tabs, rendered as a centered text nav
+	-- (Farming / Hatching / ...) at the top of the content area with an
+	-- accent underline on the active one.
+	Tab.SubTabs = {}
+	Tab.SelectedSubTab = 0
+
+	Tab.HeaderUnderline = New("Frame", {
+		AnchorPoint = Vector2.new(0, 1),
+		Size = UDim2.fromOffset(0, 2),
+		Position = UDim2.fromScale(0, 1),
+		BackgroundColor3 = Color3.fromRGB(76, 194, 255),
+		Visible = false,
+		ZIndex = 2,
+		ThemeTag = {
+			BackgroundColor3 = "Accent",
+		},
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(1, 0) }),
+	})
+
+	Tab.HeaderButtons = New("Frame", {
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+	}, {
+		New("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Padding = UDim.new(0, 22),
+		}),
+	})
+
+	Tab.HeaderRow = New("Frame", {
+		Parent = Window.Root,
+		Visible = false,
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(Window.TabWidth + 26, 44),
+		Size = UDim2.new(1, -(Window.TabWidth + 52), 0, 30),
+	}, {
+		Tab.HeaderButtons,
+		Tab.HeaderUnderline,
+	})
+
+	local function UpdateHeaderUnderline()
+		local Active = Tab.SubTabs[Tab.SelectedSubTab]
+		if not Active then
+			Tab.HeaderUnderline.Visible = false
+			return
+		end
+		local X = Active.Button.AbsolutePosition.X - Tab.HeaderRow.AbsolutePosition.X
+		Tab.HeaderUnderline.Visible = true
+		Tab.HeaderUnderline.Position = UDim2.new(0, X, 1, 0)
+		Tab.HeaderUnderline.Size = UDim2.fromOffset(Active.Button.AbsoluteSize.X, 2)
+	end
+
+	Creator.AddSignal(Tab.HeaderRow:GetPropertyChangedSignal("AbsoluteSize"), UpdateHeaderUnderline)
+
+	-- Show the header (and hide the single centered title) whenever this tab
+	-- is the visible one and it actually has sub-tabs.
+	Creator.AddSignal(Tab.ContainerFrame:GetPropertyChangedSignal("Visible"), function()
+		local HasSubs = #Tab.SubTabs > 0
+		local Active = Tab.ContainerFrame.Visible
+		Tab.HeaderRow.Visible = Active and HasSubs
+		if Active and HasSubs then
+			Window.TabDisplay.Visible = false
+			Window.TabDisplayUnderline.Visible = false
+			task.defer(UpdateHeaderUnderline)
+		elseif Active then
+			Window.TabDisplay.Visible = true
+			Window.TabDisplayUnderline.Visible = true
+		end
+	end)
+
+	function Tab:SelectSubTab(Index)
+		Tab.SelectedSubTab = Index
+		for i, Sub in next, Tab.SubTabs do
+			local On = i == Index
+			Sub.Page.Visible = On
+			Sub.Button.TextTransparency = On and 0 or 0.45
+		end
+		UpdateHeaderUnderline()
+	end
+
+	function Tab:SubTab(SubConfig)
+		SubConfig = typeof(SubConfig) == "table" and SubConfig or { Title = tostring(SubConfig) }
+		local Title = SubConfig.Title or "SubTab"
+
+		local Index = #Tab.SubTabs + 1
+
+		local SubTab = {
+			Type = "SubTab",
+			Name = Title,
+		}
+
+		SubTab.Button = New("TextButton", {
+			Parent = Tab.HeaderButtons,
+			BackgroundTransparency = 1,
+			AutomaticSize = Enum.AutomaticSize.X,
+			Size = UDim2.fromScale(0, 1),
+			Text = Title,
+			TextTransparency = 0.45,
+			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+			TextSize = 15,
+			LayoutOrder = Index,
+			ThemeTag = {
+				TextColor3 = "Text",
+			},
+		})
+
+		local PageLayout = New("UIListLayout", {
+			Padding = UDim.new(0, 5),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		})
+
+		SubTab.Page = New("Frame", {
+			Parent = Tab.ContainerFrame,
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			Visible = Index == 1,
+			LayoutOrder = Index,
+		}, {
+			PageLayout,
+		})
+
+		SubTab.Container = SubTab.Page
+		SubTab.ScrollFrame = Tab.ContainerFrame
+
+		Creator.AddSignal(SubTab.Button.MouseButton1Click, function()
+			Tab:SelectSubTab(Index)
+		end)
+
+		function SubTab:Section(SectionTitle)
+			local Section = { Type = "Section" }
+			local SectionFrame = require(Components.Section)(SectionTitle, SubTab.Page)
+			Section.Container = SectionFrame.Container
+			Section.ScrollFrame = Tab.ContainerFrame
+			setmetatable(Section, Elements)
+			return Section
+		end
+		SubTab.CreateSection = SubTab.Section
+		SubTab.AddSection = SubTab.Section
+
+		Tab.SubTabs[Index] = SubTab
+		setmetatable(SubTab, Elements)
+
+		if Index == 1 then
+			Tab.SelectedSubTab = 1
+			SubTab.Button.TextTransparency = 0
+			task.defer(UpdateHeaderUnderline)
+		end
+
+		return SubTab
+	end
+
+	Tab.CreateSubTab = Tab.SubTab
+	Tab.AddSubTab = Tab.SubTab
+
 	setmetatable(Tab, Elements)
 	return Tab
 end
