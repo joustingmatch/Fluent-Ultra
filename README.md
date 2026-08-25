@@ -14,11 +14,11 @@
 You can load Fluent through a GitHub Release:
 
 ```lua
-local Library = loadstring(game:GetService("HttpService"):GetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau", true))()
+local Library = loadstring(game:GetService("HttpService"):GetAsync("https://github.com/joustingmatch/Fluent-Ultra/releases/latest/download/Fluent.luau", true))()
 ```
 
 ```lua
-local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau", true))()
+local Library = loadstring(game:HttpGetAsync("https://github.com/joustingmatch/Fluent-Ultra/releases/latest/download/Fluent.luau", true))()
 ```
 
 ## 📜 Usage
