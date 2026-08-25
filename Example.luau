@@ -5,6 +5,7 @@ local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercon
 local Window = Library:CreateWindow{
     Title = `Fluent {Library.Version}`,
     SubTitle = "by Actual Master Oogway",
+    Icon = "turtle", -- Logo shown at the top of the rail: a Lucide/Phosphor name or an "rbxassetid://" / numeric asset id
     TabWidth = 54,
     Size = UDim2.fromOffset(830, 525),
     Resize = true, -- Resize this ^ Size according to a 1920x1080 screen, good for mobile users but may look weird on some devices

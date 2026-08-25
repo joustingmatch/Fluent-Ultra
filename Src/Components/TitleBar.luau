@@ -102,6 +102,7 @@ return function(Config)
 	TitleBar.Title = New("TextLabel", {
 		RichText = true,
 		Text = Config.Title,
+		Visible = false,
 		Parent = TitleBar.TitleHolder,
 		FontFace = Font.new(
 			"rbxasset://fonts/families/GothamSSm.json",
@@ -122,6 +123,7 @@ return function(Config)
 	TitleBar.SubTitle = New("TextLabel", {
 		RichText = true,
 		Text = Config.SubTitle,
+		Visible = false,
 		Parent = TitleBar.TitleHolder,
 		TextTransparency = 0.4,
 		FontFace = Font.new(

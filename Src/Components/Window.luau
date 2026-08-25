@@ -96,6 +96,34 @@ return function(Config)
 		}),
 	})
 
+	-- Brand logo at the top of the rail, in place of the old text title.
+	-- Config.Icon accepts a Lucide/Phosphor name or an "rbxassetid://" / numeric asset id.
+	local function ResolveIcon(Icon)
+		if typeof(Icon) == "number" then
+			Icon = "rbxassetid://" .. Icon
+		end
+		if typeof(Icon) ~= "string" then
+			return nil
+		end
+		if Icon:find("^rbxasset") or Icon:find("^http") then
+			return { Image = Icon, ImageRectOffset = Vector2.zero, ImageRectSize = Vector2.zero }
+		end
+		return Library.Utilities:GetIcon(Icon)
+	end
+
+	local LogoData = ResolveIcon(Config.Icon)
+
+	Window.Logo = New("ImageLabel", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Size = UDim2.fromOffset(30, 30),
+		Position = UDim2.fromOffset(12 + Window.TabWidth / 2, 32),
+		BackgroundTransparency = 1,
+		Visible = LogoData ~= nil,
+		Image = LogoData and LogoData.Image or "",
+		ImageRectOffset = LogoData and LogoData.ImageRectOffset or Vector2.zero,
+		ImageRectSize = LogoData and LogoData.ImageRectSize or Vector2.zero,
+	})
+
 	local TabFrame = New("Frame", {
 		Size = UDim2.new(0, Window.TabWidth, 1, -66),
 		Position = UDim2.new(0, 12, 0, 54),
@@ -169,6 +197,7 @@ return function(Config)
 	}, {
 		Window.AcrylicPaint.Frame,
 		RailPanel,
+		Window.Logo,
 		Window.TabDisplay,
 		Window.TabDisplayUnderline,
 		Window.ContainerCanvas,

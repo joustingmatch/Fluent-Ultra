@@ -3,6 +3,7 @@ local Library = require(game:GetService("ReplicatedStorage"):WaitForChild("Fluen
 local Window = Library:Window{
     Title = `Fluent {Library.Version}`,
     SubTitle = "by Actual Master Oogway",
+    Icon = "turtle", -- Logo shown at the top of the rail: a Lucide/Phosphor name or an "rbxassetid://" / numeric asset id
     TabWidth = 54,
     Size = UDim2.fromOffset(830, 525),
     Resize = true,

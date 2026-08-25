@@ -249,6 +249,7 @@ Library.Elements = Elements
 function Library:Window(Config: {
 		Title: string?,
 		SubTitle: string?,
+		Icon: string?,
 		TabWidth: number?,
 		MinSize: Vector2?,
 		Size: UDim2?,
@@ -292,6 +293,7 @@ function Library:Window(Config: {
 
 		Title = Config.Title,
 		SubTitle = Config.SubTitle or "Made with Fluent Renewed",
+		Icon = Config.Icon,
 
 		TabWidth = Config.TabWidth or 54,
 		Mobile = Config.Mobile or {
