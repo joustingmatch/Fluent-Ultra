@@ -50,8 +50,21 @@ function TabModule:New(Title, Icon, Parent)
 
 	-- Icon-only rail button: the icon is centered, the tab name lives in a
 	-- hover tooltip (see below) rather than beside the icon.
+	Tab.IconImage = New("ImageLabel", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Size = UDim2.fromOffset(20, 20),
+		Position = UDim2.fromScale(0.5, 0.5),
+		BackgroundTransparency = 1,
+		ImageRectOffset = Icon and Icon.ImageRectOffset or Vector2.zero,
+		ImageRectSize = Icon and Icon.ImageRectSize or Vector2.zero,
+		Image = Icon and Icon.Image or nil,
+		ThemeTag = {
+			ImageColor3 = "Text",
+		},
+	})
+
 	Tab.Frame = New("TextButton", {
-		Size = UDim2.new(1, 0, 0, 40),
+		Size = UDim2.new(1, 0, 0, 44),
 		BackgroundTransparency = 1,
 		Parent = Parent,
 		Text = "",
@@ -60,20 +73,9 @@ function TabModule:New(Title, Icon, Parent)
 		},
 	}, {
 		New("UICorner", {
-			CornerRadius = UDim.new(0, 8),
+			CornerRadius = UDim.new(0, 12),
 		}),
-		New("ImageLabel", {
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			Size = UDim2.fromOffset(20, 20),
-			Position = UDim2.fromScale(0.5, 0.5),
-			BackgroundTransparency = 1,
-			ImageRectOffset = Icon and Icon.ImageRectOffset or Vector2.zero,
-			ImageRectSize = Icon and Icon.ImageRectSize or Vector2.zero,
-			Image = Icon and Icon.Image or nil,
-			ThemeTag = {
-				ImageColor3 = "Text",
-			},
-		}),
+		Tab.IconImage,
 	})
 
 	-- Tooltip that reveals the tab name to the right of the rail on hover,
@@ -353,6 +355,7 @@ function TabModule:New(Title, Icon, Parent)
 			-- Sub-tabbed tabs show the header; plain tabs show the centered title.
 			Window.TabDisplay.Visible = not HasSubs
 			Window.TabDisplayUnderline.Visible = not HasSubs
+			Window:SetContentTop(HasSubs)
 			if HasSubs then
 				task.defer(UpdateHeaderUnderline)
 			end
@@ -466,6 +469,15 @@ function TabModule:SelectTab(Tab)
 
 	TabModule.Tabs[Tab].SetTransparency(0.89)
 	TabModule.Tabs[Tab].Selected = true
+
+	-- Active icon renders dark on the accent highlight; others stay light.
+	for Index, TabObject in next, TabModule.Tabs do
+		if TabObject.IconImage then
+			Creator.OverrideTag(TabObject.IconImage, {
+				ImageColor3 = Index == Tab and "ToggleToggled" or "Text",
+			})
+		end
+	end
 
 	Window.TabDisplay.Text = TabModule.Tabs[Tab].Name
 	Window.SelectorPosMotor:setGoal(Spring(TabModule:GetCurrentTabPos(), { frequency = 6 }))

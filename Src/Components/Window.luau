@@ -91,18 +91,32 @@ return function(Config)
 
 	-- Rounded-square highlight that sits behind the active rail icon.
 	local Selector = New("Frame", {
-		Size = UDim2.new(1, 0, 0, 40),
+		Size = UDim2.new(1, -4, 0, 44),
+		AnchorPoint = Vector2.new(0.5, 0),
 		BackgroundColor3 = Color3.fromRGB(76, 194, 255),
-		Position = UDim2.fromOffset(0, 0),
-		BackgroundTransparency = 0.82,
-		AnchorPoint = Vector2.new(0, 0),
+		Position = UDim2.new(0.5, 0, 0, 0),
+		BackgroundTransparency = 0.35,
 		ThemeTag = {
 			BackgroundColor3 = "Accent",
 		},
 	}, {
 		New("UICorner", {
-			CornerRadius = UDim.new(0, 8),
+			CornerRadius = UDim.new(0, 12),
 		}),
+	})
+
+	-- Short vertical accent pill at the rail's left edge, aligned to the
+	-- active icon (parented to Root so it can sit outside the clipped rail).
+	Window.SelectorPill = New("Frame", {
+		Size = UDim2.fromOffset(4, 20),
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromOffset(10, 0),
+		BackgroundColor3 = Color3.fromRGB(76, 194, 255),
+		ThemeTag = {
+			BackgroundColor3 = "Accent",
+		},
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(1, 0) }),
 	})
 
 	local ResizeStartFrame = New("Frame", {
@@ -121,7 +135,7 @@ return function(Config)
 		ScrollingDirection = Enum.ScrollingDirection.Y,
 	}, {
 		New("UIListLayout", {
-			Padding = UDim.new(0, 4),
+			Padding = UDim.new(0, 6),
 		}),
 	})
 
@@ -135,7 +149,14 @@ return function(Config)
 		},
 	}, {
 		New("UICorner", {
-			CornerRadius = UDim.new(0, 12),
+			CornerRadius = UDim.new(0, 16),
+		}),
+		New("UIStroke", {
+			Transparency = 0.7,
+			Thickness = 1,
+			ThemeTag = {
+				Color = "AcrylicBorder",
+			},
 		}),
 	})
 
@@ -156,10 +177,22 @@ return function(Config)
 
 	local LogoData = ResolveIcon(Config.Icon)
 
+	-- Subtle rounded square behind the logo.
+	Window.LogoBackground = New("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Size = UDim2.fromOffset(42, 42),
+		Position = UDim2.fromOffset(12 + Window.TabWidth / 2, 34),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.92,
+		Visible = LogoData ~= nil,
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(0, 12) }),
+	})
+
 	Window.Logo = New("ImageLabel", {
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Size = UDim2.fromOffset(30, 30),
-		Position = UDim2.fromOffset(12 + Window.TabWidth / 2, 32),
+		Position = UDim2.fromOffset(12 + Window.TabWidth / 2, 34),
 		BackgroundTransparency = 1,
 		Visible = LogoData ~= nil,
 		Image = LogoData and LogoData.Image or "",
@@ -168,13 +201,13 @@ return function(Config)
 	})
 
 	local TabFrame = New("Frame", {
-		Size = UDim2.new(0, Window.TabWidth, 1, -70),
-		Position = UDim2.new(0, 12, 0, 58),
+		Size = UDim2.new(0, Window.TabWidth, 1, -80),
+		Position = UDim2.new(0, 12, 0, 68),
 		BackgroundTransparency = 1,
 		ClipsDescendants = true,
 	}, {
-		Window.TabHolder,
 		Selector,
+		Window.TabHolder,
 	})
 
 	-- Centered tab title shown for tabs without sub-tabs.
@@ -239,11 +272,13 @@ return function(Config)
 	}, {
 		Window.AcrylicPaint.Frame,
 		RailPanel,
+		Window.LogoBackground,
 		Window.Logo,
 		Window.TabDisplay,
 		Window.TabDisplayUnderline,
 		Window.ContainerCanvas,
 		TabFrame,
+		Window.SelectorPill,
 		ResizeStartFrame,
 	})
 
@@ -291,8 +326,12 @@ return function(Config)
 
 	local LastValue = 0
 	local LastTime = 0
+	local TabFrameTop = 68
+	local TabRowHeight = 44
 	Window.SelectorPosMotor:onStep(function(Value)
-		Selector.Position = UDim2.new(0, 0, 0, Value)
+		Selector.Position = UDim2.new(0.5, 0, 0, Value)
+		-- Pill lives in Root coordinates; center it on the active row.
+		Window.SelectorPill.Position = UDim2.fromOffset(10, TabFrameTop + Value + TabRowHeight / 2)
 	end)
 
 	Window.ContainerBackMotor:onStep(function(Value)
@@ -302,6 +341,14 @@ return function(Config)
 	Window.ContainerPosMotor:onStep(function(Value)
 		Window.ContainerAnim.Position = UDim2.fromOffset(0, Value)
 	end)
+
+	-- Content starts just below the title for plain tabs, and lower when a
+	-- sub-tab header needs room. Called by the tab on selection.
+	function Window:SetContentTop(HasSubs)
+		local Top = HasSubs and 90 or 78
+		Window.ContainerCanvas.Position = UDim2.fromOffset(Window.TabWidth + 26, Top)
+		Window.ContainerCanvas.Size = UDim2.new(1, -Window.TabWidth - 32, 1, -(Top + 12))
+	end
 
 	-- Maximize was removed along with the title-bar buttons; kept as a no-op
 	-- for API compatibility.
