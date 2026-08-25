@@ -129,8 +129,10 @@ return function(Config)
 	local RailPanel = New("Frame", {
 		Size = UDim2.new(0, Window.TabWidth + 12, 1, -16),
 		Position = UDim2.fromOffset(8, 8),
-		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-		BackgroundTransparency = 0.55,
+		BackgroundTransparency = 0.4,
+		ThemeTag = {
+			BackgroundColor3 = "Sidebar",
+		},
 	}, {
 		New("UICorner", {
 			CornerRadius = UDim.new(0, 12),
@@ -175,6 +177,41 @@ return function(Config)
 		Selector,
 	})
 
+	-- Centered tab title shown for tabs without sub-tabs.
+	Window.TabDisplayUnderline = New("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Size = UDim2.fromOffset(0, 2),
+		Position = UDim2.new(0.5, math.floor(Window.TabWidth / 2), 0, 74),
+		BackgroundColor3 = Color3.fromRGB(76, 194, 255),
+		Visible = false,
+		ThemeTag = {
+			BackgroundColor3 = "Accent",
+		},
+	}, {
+		New("UICorner", { CornerRadius = UDim.new(1, 0) }),
+	})
+
+	Window.TabDisplay = New("TextLabel", {
+		RichText = true,
+		Text = "Tab",
+		Visible = false,
+		TextTransparency = 0,
+		FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+		TextSize = 18,
+		TextXAlignment = "Center",
+		TextYAlignment = "Center",
+		Size = UDim2.new(1, -(Window.TabWidth + 52), 0, 22),
+		Position = UDim2.fromOffset(Window.TabWidth + 26, 48),
+		BackgroundTransparency = 1,
+		ThemeTag = {
+			TextColor3 = "Text",
+		},
+	})
+
+	Creator.AddSignal(Window.TabDisplay:GetPropertyChangedSignal("TextBounds"), function()
+		Window.TabDisplayUnderline.Size = UDim2.fromOffset(Window.TabDisplay.TextBounds.X + 8, 2)
+	end)
+
 	Window.ContainerHolder = New("Frame", {
 		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
@@ -203,6 +240,8 @@ return function(Config)
 		Window.AcrylicPaint.Frame,
 		RailPanel,
 		Window.Logo,
+		Window.TabDisplay,
+		Window.TabDisplayUnderline,
 		Window.ContainerCanvas,
 		TabFrame,
 		ResizeStartFrame,
@@ -264,35 +303,9 @@ return function(Config)
 		Window.ContainerAnim.Position = UDim2.fromOffset(0, Value)
 	end)
 
-	local OldSizeX
-	local OldSizeY
-	Window.Maximize = function(Value, NoPos, Instant)
-		Window.OnMaximized:Fire(tick())
-
-		Window.Maximized = Value
-		Window.TitleBar.MaxButton.Frame.Icon.Image = Value and Assets.Restore or Assets.Max
-
-		if Value then
-			OldSizeX = Window.Size.X.Offset
-			OldSizeY = Window.Size.Y.Offset
-		end
-		local SizeX = Value and Camera.ViewportSize.X or OldSizeX
-		local SizeY = Value and Camera.ViewportSize.Y or OldSizeY
-		SizeMotor:setGoal({
-			X = Flipper[Instant and "Instant" or "Spring"].new(SizeX, { frequency = 6 }),
-			Y = Flipper[Instant and "Instant" or "Spring"].new(SizeY, { frequency = 6 }),
-		})
-		Window.Size = UDim2.fromOffset(SizeX, SizeY)
-
-		if not NoPos then
-			PosMotor:setGoal({
-				X = Spring(Value and 0 or Window.Position.X.Offset, { frequency = 6 }),
-				Y = Spring(Value and 0 or Window.Position.Y.Offset, { frequency = 6 }),
-			})
-		end
-
-		Window.PostMaximized:Fire(tick())
-	end
+	-- Maximize was removed along with the title-bar buttons; kept as a no-op
+	-- for API compatibility.
+	Window.Maximize = function() end
 
 	Creator.AddSignal(Window.TitleBar.Frame.InputBegan, function(Input)
 		if
@@ -302,13 +315,6 @@ return function(Config)
 			Dragging = true
 			MousePos = Input.Position
 			StartPos = Window.Root.Position
-
-			if Window.Maximized then
-				StartPos = UDim2.fromOffset(
-					Mouse.X - (Mouse.X * ((OldSizeX - 100) / Window.Root.AbsoluteSize.X)),
-					Mouse.Y - (Mouse.Y * (OldSizeY / Window.Root.AbsoluteSize.Y))
-				)
-			end
 
 			Input.Changed:Connect(function()
 				if Input.UserInputState == Enum.UserInputState.End then
@@ -345,10 +351,6 @@ return function(Config)
 				X = Instant(Window.Position.X.Offset),
 				Y = Instant(Window.Position.Y.Offset),
 			})
-
-			if Window.Maximized then
-				Window.Maximize(false, true, true)
-			end
 		end
 
 		if

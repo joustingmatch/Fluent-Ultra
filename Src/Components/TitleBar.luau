@@ -133,29 +133,8 @@ return function(Config)
 		}
 	})
 
-	TitleBar.CloseButton = BarButton(Library.Utilities:GetIcon("Close"), UDim2.new(1, -4, 0, 4), TitleBar.Frame, 0, function()
-		Library.CreatedWindow:Dialog{
-			Title = "Close",
-			Content = "Are you sure you want to unload the interface?",
-			Buttons = {
-				{
-					Title = "Yes",
-					Callback = Library.Destroy,
-				},
-				{
-					Title = "No",
-				}
-			}
-		}
-	end)
-
-	TitleBar.MaxButton = BarButton(Library.Utilities:GetIcon("Max"), UDim2.new(1, -40, 0, 4), TitleBar.Frame, 0, function()
-		Config.Window.Maximize(not Config.Window.Maximized)
-	end)
-
-	TitleBar.MinButton = BarButton(Library.Utilities:GetIcon("Min"), UDim2.new(1, -80, 0, 4), TitleBar.Frame, 0, function()
-		Config.Window:Minimize()
-	end)
+	-- Window control buttons (min/max/close) removed. The whole title bar
+	-- stays draggable; use the minimize keybind and the Unload button instead.
 
 	-- Searchbox would take alot of time
 	--[[ 

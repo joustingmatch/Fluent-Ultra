@@ -88,7 +88,31 @@ local InterfaceManager = {} do
 		})
 
         InterfaceTheme:SetValue(Settings.Theme)
-	
+
+		-- Customizable accent color, applied on top of the chosen theme.
+		local function ToColor3(v)
+			if typeof(v) == "table" and v[1] then
+				return Color3.fromRGB(v[1], v[2], v[3])
+			end
+			return nil
+		end
+
+		local SavedAccent = ToColor3(Settings.Accent)
+		if SavedAccent then
+			Library:SetAccent(SavedAccent)
+		end
+
+		section:AddColorpicker("InterfaceManager_Accent", {
+			Title = "Accent Color",
+			Description = "Changes the interface accent color.",
+			Default = SavedAccent or Library:GetAccent(),
+			Callback = function(Value)
+				Library:SetAccent(Value)
+				Settings.Accent = { math.floor(Value.R * 255), math.floor(Value.G * 255), math.floor(Value.B * 255) }
+				InterfaceManager:SaveSettings()
+			end
+		})
+
 		if Library.UseAcrylic then
 			section:AddToggle("InterfaceManager_AcrylicToggle", {
 				Title = "Acrylic",

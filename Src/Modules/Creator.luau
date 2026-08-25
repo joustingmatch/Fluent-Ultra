@@ -95,7 +95,14 @@ function Creator.Disconnect()
 	end
 end
 
+-- Optional user-set accent that overrides every theme's Accent color.
+Creator.AccentOverride = nil
+
 function Creator.GetThemeProperty(Property)
+	if Property == "Accent" and Creator.AccentOverride then
+		return Creator.AccentOverride
+	end
+
 	if Themes[require(Root).Theme][Property] then
 		return Themes[require(Root).Theme][Property]
 	end

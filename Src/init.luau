@@ -323,6 +323,19 @@ function Library:SetTheme(Name: string)
 	end
 end
 
+-- Customizable accent color, applied on top of any theme.
+function Library:SetAccent(Color: Color3?)
+	Creator.AccentOverride = typeof(Color) == "Color3" and Color or nil
+	Library.AccentColor = Creator.AccentOverride
+	if Library.CreatedWindow then
+		Creator.UpdateTheme()
+	end
+end
+
+function Library:GetAccent(): Color3
+	return Creator.AccentOverride or Creator.GetThemeProperty("Accent")
+end
+
 function Library:Destroy()
 	if Library.CreatedWindow then
 		Library.Unloaded = true

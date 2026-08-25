@@ -322,7 +322,7 @@ function TabModule:New(Title, Icon, Parent)
 		Tab.HeaderUnderline,
 	})
 
-	local function UpdateHeaderUnderline()
+	local function UpdateHeaderUnderline(Animate)
 		local Active = Tab.SubTabs[Tab.SelectedSubTab]
 		if not Active then
 			Tab.HeaderUnderline.Visible = false
@@ -330,8 +330,15 @@ function TabModule:New(Title, Icon, Parent)
 		end
 		local X = Active.Button.AbsolutePosition.X - Tab.HeaderRow.AbsolutePosition.X
 		Tab.HeaderUnderline.Visible = true
-		Tab.HeaderUnderline.Position = UDim2.new(0, X, 1, 0)
-		Tab.HeaderUnderline.Size = UDim2.fromOffset(Active.Button.AbsoluteSize.X, 2)
+		local GoalPos = UDim2.new(0, X, 1, 0)
+		local GoalSize = UDim2.fromOffset(Active.Button.AbsoluteSize.X, 2)
+		if Animate then
+			local Info = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+			TweenService:Create(Tab.HeaderUnderline, Info, { Position = GoalPos, Size = GoalSize }):Play()
+		else
+			Tab.HeaderUnderline.Position = GoalPos
+			Tab.HeaderUnderline.Size = GoalSize
+		end
 	end
 
 	Creator.AddSignal(Tab.HeaderRow:GetPropertyChangedSignal("AbsoluteSize"), UpdateHeaderUnderline)
@@ -342,19 +349,31 @@ function TabModule:New(Title, Icon, Parent)
 		local HasSubs = #Tab.SubTabs > 0
 		local Active = Tab.ContainerFrame.Visible
 		Tab.HeaderRow.Visible = Active and HasSubs
-		if Active and HasSubs then
-			task.defer(UpdateHeaderUnderline)
+		if Active then
+			-- Sub-tabbed tabs show the header; plain tabs show the centered title.
+			Window.TabDisplay.Visible = not HasSubs
+			Window.TabDisplayUnderline.Visible = not HasSubs
+			if HasSubs then
+				task.defer(UpdateHeaderUnderline)
+			end
 		end
 	end)
 
 	function Tab:SelectSubTab(Index)
 		Tab.SelectedSubTab = Index
+		local FadeInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		for i, Sub in next, Tab.SubTabs do
 			local On = i == Index
-			Sub.Page.Visible = On
-			Sub.Button.TextTransparency = On and 0 or 0.45
+			if On then
+				Sub.Page.Visible = true
+				Sub.Page.GroupTransparency = 1
+				TweenService:Create(Sub.Page, FadeInfo, { GroupTransparency = 0 }):Play()
+			else
+				Sub.Page.Visible = false
+			end
+			TweenService:Create(Sub.Button, FadeInfo, { TextTransparency = On and 0 or 0.45 }):Play()
 		end
-		UpdateHeaderUnderline()
+		UpdateHeaderUnderline(true)
 	end
 
 	function Tab:SubTab(SubConfig)
@@ -383,11 +402,12 @@ function TabModule:New(Title, Icon, Parent)
 			},
 		})
 
-		SubTab.Page = New("Frame", {
+		SubTab.Page = New("CanvasGroup", {
 			Parent = Tab.ContainerFrame,
 			BackgroundTransparency = 1,
 			Size = UDim2.new(1, 0, 0, 0),
 			AutomaticSize = Enum.AutomaticSize.Y,
+			GroupTransparency = 0,
 			Visible = Index == 1,
 			LayoutOrder = Index,
 		})
@@ -447,6 +467,7 @@ function TabModule:SelectTab(Tab)
 	TabModule.Tabs[Tab].SetTransparency(0.89)
 	TabModule.Tabs[Tab].Selected = true
 
+	Window.TabDisplay.Text = TabModule.Tabs[Tab].Name
 	Window.SelectorPosMotor:setGoal(Spring(TabModule:GetCurrentTabPos(), { frequency = 6 }))
 
 	task.spawn(function()

@@ -9,6 +9,8 @@ return {
 	TitleBarLine = Color3.fromRGB(160, 160, 160),
 	Tab = Color3.fromRGB(90, 90, 90),
 
+	Sidebar = Color3.fromRGB(215, 215, 215),
+
 	Element = Color3.fromRGB(255, 255, 255),
 	ElementBorder = Color3.fromRGB(180, 180, 180),
 	InElementBorder = Color3.fromRGB(150, 150, 150),
