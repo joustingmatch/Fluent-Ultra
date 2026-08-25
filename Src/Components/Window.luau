@@ -214,7 +214,7 @@ return function(Config)
 	Window.TabDisplayUnderline = New("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0),
 		Size = UDim2.fromOffset(0, 2),
-		Position = UDim2.new(0.5, math.floor(Window.TabWidth / 2), 0, 74),
+		Position = UDim2.new(0.5, math.floor(Window.TabWidth / 2) + 10, 0, 74),
 		BackgroundColor3 = Color3.fromRGB(76, 194, 255),
 		Visible = false,
 		ThemeTag = {
@@ -233,8 +233,8 @@ return function(Config)
 		TextSize = 18,
 		TextXAlignment = "Center",
 		TextYAlignment = "Center",
-		Size = UDim2.new(1, -(Window.TabWidth + 52), 0, 22),
-		Position = UDim2.fromOffset(Window.TabWidth + 26, 48),
+		Size = UDim2.new(1, -(Window.TabWidth + 68), 0, 22),
+		Position = UDim2.fromOffset(Window.TabWidth + 44, 48),
 		BackgroundTransparency = 1,
 		ThemeTag = {
 			TextColor3 = "Text",
@@ -256,8 +256,8 @@ return function(Config)
 	})
 
 	Window.ContainerCanvas = New("Frame", {
-		Size = UDim2.new(1, -Window.TabWidth - 32, 1, -102),
-		Position = UDim2.fromOffset(Window.TabWidth + 26, 90),
+		Size = UDim2.new(1, -(Window.TabWidth + 68), 1, -102),
+		Position = UDim2.fromOffset(Window.TabWidth + 44, 90),
 		BackgroundTransparency = 1,
 	}, {
 		Window.ContainerAnim,
@@ -346,8 +346,8 @@ return function(Config)
 	-- sub-tab header needs room. Called by the tab on selection.
 	function Window:SetContentTop(HasSubs)
 		local Top = HasSubs and 90 or 78
-		Window.ContainerCanvas.Position = UDim2.fromOffset(Window.TabWidth + 26, Top)
-		Window.ContainerCanvas.Size = UDim2.new(1, -Window.TabWidth - 32, 1, -(Top + 12))
+		Window.ContainerCanvas.Position = UDim2.fromOffset(Window.TabWidth + 44, Top)
+		Window.ContainerCanvas.Size = UDim2.new(1, -(Window.TabWidth + 68), 1, -(Top + 12))
 	end
 
 	-- Maximize was removed along with the title-bar buttons; kept as a no-op

@@ -317,8 +317,8 @@ function TabModule:New(Title, Icon, Parent)
 		Parent = Window.Root,
 		Visible = false,
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(Window.TabWidth + 26, 44),
-		Size = UDim2.new(1, -(Window.TabWidth + 52), 0, 30),
+		Position = UDim2.fromOffset(Window.TabWidth + 44, 44),
+		Size = UDim2.new(1, -(Window.TabWidth + 68), 0, 30),
 	}, {
 		Tab.HeaderButtons,
 		Tab.HeaderUnderline,

@@ -29,7 +29,8 @@ function Element:New(Idx, Config)
 		Value = Config.Default or Config.Value,
 		Multi = Config.Multi or false,
 		AutoDeselect = Config.AutoDeselect or false,
-		Searchable = Config.Searchable or false,
+		-- Searchable by default; pass Searchable = false to opt out.
+		Searchable = if Config.Searchable == nil then true else Config.Searchable,
 		FocusSearch = Config.FocusSearch or true,
 		SearchPlaceholder = Config.SearchPlaceholder or "Search...",
 		Displayer = typeof(Config.Displayer) == "function" and Config.Displayer or function(Value)
@@ -358,7 +359,7 @@ function Element:New(Idx, Config)
 				task.wait()
 			end
 
-			if Dropdown.Searchable and SearchBox.Text ~= "" and not string.lower(Dropdown.Displayer(Value)):match(string.lower(SearchBox.Text)) then
+			if Dropdown.Searchable and SearchBox.Text ~= "" and not string.find(string.lower(tostring(Dropdown.Displayer(Value))), string.lower(SearchBox.Text), 1, true) then
 				continue
 			end
 
